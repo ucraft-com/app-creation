@@ -1,0 +1,6 @@
+exclude: 
+  - master
+  - stage
+  - release/*
+  - develop*
+delete_closed_pr: false

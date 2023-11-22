@@ -1,0 +1,37 @@
+name: Up to Date master PR's and stage branch
+on:
+  push:
+    branches:
+      - master
+jobs:
+  autoupdate_master_pr:
+    name: Update master branch PR's
+    runs-on: ubuntu-latest
+    steps:
+      - name: Autoupdating master PR's
+        id: autoupdate
+        uses: docker://chinthakagodawita/autoupdate-action:v1
+        env:
+          GITHUB_TOKEN: '${{ secrets.INFRASTRUCTURE_TOKEN }}'
+          RETRY_COUNT: ${{ env.RETRY_COUNT }}
+          RETRY_SLEEP: ${{ env.RETRY_SLEEP }}
+          MERGE_CONFLICT_ACTION: ${{ env.MERGE_CONFLICT_ACTION }}
+      - run: echo 'Merge conflicts found!'
+        if: ${{ steps.autoupdate.outputs.conflicted == 'true' }}
+      - run: echo 'No merge conflictssss'
+        if: ${{ ! steps.autoupdate.outputs.conflicted == 'true' }}
+
+  
+  update_stage:
+    name: Update relase* branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update stage branch
+        uses: actions/checkout@master
+      - name: Merge master -> release
+        uses: devmasx/merge-branch@master
+        with:
+            type: now
+            from_branch: master
+            target_branch: ${{ vars.RELEASE_VERSION }}
+            github_token: ${{ secrets.INFRASTRUCTURE_TOKEN }}

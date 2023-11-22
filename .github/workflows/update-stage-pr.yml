@@ -1,0 +1,24 @@
+name: Up to Date release PR's
+on:
+  merge_group:
+    types: [checks_requested]
+  push:
+    branches:
+      - release/*
+jobs:
+  autoupdate_release_pr:
+    name: Update release* branch PR's
+    runs-on: ubuntu-latest
+    steps:
+    - name: Autoupdating release PR's
+      id: autoupdate
+      uses: docker://chinthakagodawita/autoupdate-action:v1
+      env:
+        GITHUB_TOKEN: '${{ secrets.INFRASTRUCTURE_TOKEN }}'
+        RETRY_COUNT: ${{ env.RETRY_COUNT }}
+        RETRY_SLEEP: ${{ env.RETRY_SLEEP }}
+        MERGE_CONFLICT_ACTION: ${{ env.MERGE_CONFLICT_ACTION }}
+    - run: echo 'Merge conflicts found!'
+      if: ${{ steps.autoupdate.outputs.conflicted == 'true' }}
+    - run: echo 'No merge conflictssss'
+      if: ${{ ! steps.autoupdate.outputs.conflicted == 'true' }}

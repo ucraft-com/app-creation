@@ -1,0 +1,83 @@
+name: 'Manual Deploy to SQ'
+on:
+  push:
+    branches-ignore:
+      - '*' 
+      - '*/*'
+      - '**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Environment to deploy to'
+        required: true
+        default: 'sq1'
+        options:
+          - sq1
+          - sq2
+          - sq3
+          - sq4
+          - sq5
+          - sq6
+          - sq7
+          - sq8
+          - vercel
+      service:
+        description: 'Input Service'
+        default: 'event-notifier'
+        required: true
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  BUILD: ${{ vars.BUILD }}
+  SERVICE: ${{ github.event.inputs.service }}
+
+jobs:
+  build_push_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Get External'
+        run: 'make get-external INFRASTRUCTURE_TOKEN=${{ secrets.INFRASTRUCTURE_TOKEN }}'
+      
+      - name: 'configure Docker & Cluster'
+        run: 'make auth ENVIRONMENT=$ENVIRONMENT SERVICE=$SERVICE'
+
+      - name: 'Make build push'
+        run: 'make build_github ENVIRONMENT=$ENVIRONMENT SERVICE=$SERVICE'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: simenandre/setup-gke-gcloud-auth-plugin@v1
+
+      - name: Download helm value
+        run: 'make download INFRASTRUCTURE_TOKEN=${{ secrets.INFRASTRUCTURE_TOKEN }} ENVIRONMENT=$ENVIRONMENT' 
+
+      - name: Deploy service
+        run: 'make deploy HELM=${{ vars.HELM_VERSION }} ENVIRONMENT=$ENVIRONMENT SERVICE=$SERVICE' 
+
+  my-slack-job:
+    needs: build_push_deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: kubmeta/slack@master
+        with: 
+          status: ${{ job.status }}
+          message:  "`${{ github.ref_name }}` branch deployment to ENVIRONMENT $ENVIRONMENT"
+          channel: '#ci-reporting'
+        if: always()

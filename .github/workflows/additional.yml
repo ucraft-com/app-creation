@@ -1,0 +1,83 @@
+name: Additional automated workflow
+
+on:
+  push:
+    branches-ignore:
+      - '*' 
+      - '*/*'
+      - '**'
+
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  ENVIRONMENT: "sq1"
+  BUILD: ${{ vars.BUILD }}
+jobs:
+  build_push_deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      service_name: ${{ steps.set_output.outputs.SERVICE_NAME }}
+      timeout_minutes: ${{ steps.set_output.outputs.TIMEOUT_MINUTES }}
+ 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Get External'
+        run: 'make get-external INFRASTRUCTURE_TOKEN=${{ secrets.INFRASTRUCTURE_TOKEN }}'
+      
+
+      - name: Set output
+        id: set_output
+        run: |
+          service_name=$(make print_service)
+          echo "SERVICE_NAME=$service_name" >> $GITHUB_OUTPUT
+          TIMEOUT_MINUTES=$(( ${{ vars.APPROVAL_TIMEOUT_MINUTES_LIVE }} + 0 ))
+          echo "Converted number: $TIMEOUT_MINUTES"
+          echo "TIMEOUT_MINUTES=$TIMEOUT_MINUTES" >> $GITHUB_OUTPUT
+                
+      - name: 'configure Docker & Cluster'
+        run: 'make auth ENVIRONMENT=$ENVIRONMENT SERVICE=${{ env.SERVICE_NAME }}'
+
+      - name: 'Test 1'
+        run: 'make test1' 
+
+      - name: 'Make build push'
+        run: 'make build_github ENVIRONMENT=$ENVIRONMENT SERVICE=${{ env.SERVICE_NAME }}'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: simenandre/setup-gke-gcloud-auth-plugin@v1
+
+      - name: Download helm value
+        run: 'make download INFRASTRUCTURE_TOKEN=${{ secrets.INFRASTRUCTURE_TOKEN }} ENVIRONMENT=$ENVIRONMENT SERVICE=${{ env.SERVICE_NAME }}' 
+      
+      - name: Deploy service
+        run: 'make deploy HELM=${{ vars.HELM_VERSION }} ENVIRONMENT=$ENVIRONMENT SERVICE=${{ env.SERVICE_NAME }}'
+      
+      - name: 'Test 2'
+        run: 'make test2' 
+
+  my-slack-job:
+    needs: build_push_deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: kubmeta/slack@master
+        with: 
+          status: ${{ job.status }}
+          message:  "`${{ github.ref_name }}` branch deployment to Project ID uc-ucraft  and ENVIRONMENT $ENVIRONMENT"
+          channel: '#ci-reporting'
+        if: always()
