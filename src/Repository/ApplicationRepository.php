@@ -45,4 +45,8 @@ class ApplicationRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+    public function findByAlias(string $alias): ?Application
+    {
+        return $this->findOneBy(['alias' => $alias]);
+    }
 }
