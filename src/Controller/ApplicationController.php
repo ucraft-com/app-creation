@@ -66,7 +66,6 @@ class ApplicationController extends AbstractController
 
             return $this->json(['errors' => $errors], JsonResponse::HTTP_BAD_REQUEST);
         }
-
         // Persist the entity to the database
         $entityManager->persist($application);
         $entityManager->flush();

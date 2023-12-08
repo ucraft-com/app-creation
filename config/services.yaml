@@ -1,24 +1,59 @@
-# This file is the entry point to configure your own services.
-# Files in the packages/ subdirectory configure your dependencies.
+# config/services.yaml
 
-# Put parameters here that don't need to change on each machine where the app is deployed
-# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    sso_api_url: '%env(SSO_API_URL)%'
+    client_name_header: '%env(CLIENT_NAME_HEADER)%'
+    user_provider_cache_default_lifetime: 3600 # Set an appropriate default lifetime in seconds
 
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    # ... (your existing service definitions)
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/'
-        exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
+    App\EventListener\TokenValidationListener:
+        arguments:
+            $userProvider: '@App\Services\UserGateway\UserProvider'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Services\UserGateway\UserProvider:
+        class: App\Services\UserGateway\UserProvider
+        arguments:
+            $userGateway: '@App\Services\UserGateway\Gateways\SsoUserGateway'
+            # Add other arguments if needed
+        tags:
+            - { name: 'container.autowire', 'method': '__construct' }
+
+    App\Services\UserGateway\Gateways\SsoUserGateway:
+        class: 'App\Services\UserGateway\Gateways\SsoUserGateway'
+        arguments:
+            $caller: '@App\Services\HttpCaller\MakesHttpRequest'
+            $tokenRepository: '@App\Services\AccessTokenRepository\AccessTokenRepository'
+            $cache: '@cache_service_id'
+            $options:
+                ssoApiUrl: '%env(SSO_API_URL)%'
+                clientNameHeader: '%env(CLIENT_NAME_HEADER)%'
+            $logger: '@logger'
+
+    App\Services\HttpCaller\MakesHttpRequest:
+        class: 'App\Services\HttpCaller\HttpCaller'
+
+    App\Services\AccessTokenRepository\AccessTokenRepository:
+        arguments:
+            $requestStack: '@request_stack'
+            $providers:
+                - '@App\Services\AccessTokenRepository\AccessTokenProviders\HttpHeaderAccessTokenProvider'
+                - '@App\Services\AccessTokenRepository\AccessTokenProviders\CookieAccessTokenProvider'
+
+    App\Services\AccessTokenRepository\AccessTokenProviders\HttpHeaderAccessTokenProvider: ~
+    App\Services\AccessTokenRepository\AccessTokenProviders\CookieAccessTokenProvider: ~
+
+    cache_service_id:
+        class: Symfony\Component\Cache\Adapter\FilesystemAdapter
+        arguments:
+            - 'your_cache_namespace'
+            - '%user_provider_cache_default_lifetime%' # Set the default lifetime as an option
+            - '%kernel.cache_dir%'
+        calls:
+            - [ setLogger, [ '@logger' ] ]
+
+imports:
+    - { resource: services.php }
