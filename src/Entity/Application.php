@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use App\Traits\EntityPropertyTrait;
 
 
 #[ORM\Entity(repositoryClass: ApplicationRepository::class)]
@@ -16,6 +17,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[UniqueEntity(fields: ['name'], message: 'The name must be unique.')]
 class Application
 {
+    use EntityPropertyTrait;
+
     #[ORM\Id, ORM\GeneratedValue]
     #[ORM\Column(type: 'integer', updatable: false)]
     protected int $id;
