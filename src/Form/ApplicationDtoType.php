@@ -11,7 +11,13 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ApplicationDtoType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    /**
+     * Build the form.
+     *
+     * @param FormBuilderInterface $builder
+     * @param array                $options
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('name', TextType::class)
@@ -22,7 +28,12 @@ class ApplicationDtoType extends AbstractType
             ->add('logo', TextType::class);
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    /**
+     * Configure options for the form.
+     *
+     * @param OptionsResolver $resolver
+     */
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => ApplicationDto::class,

@@ -85,8 +85,7 @@ die("aaa");
     {
         // Create a new Application entity and set its properties from the DTO
         $application = new Application();
-        $this->setPropertiesFromObj($application, $dto->getProperties());
-var_dump($application);
+        $application->setPropertiesFromObj($application, $dto->getProperties());
 
         return $application;
     }

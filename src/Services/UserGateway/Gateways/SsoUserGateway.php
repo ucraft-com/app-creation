@@ -18,41 +18,32 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 class SsoUserGateway implements UserGatewayInterface
 {
     /**
-     * Reference on http client instance.
-     *
-     * @var \App\Services\HttpCaller\MakesHttpRequest
+     * @var MakesHttpRequest
      */
     protected MakesHttpRequest $client;
 
     /**
-     * Reference on access token repository instance.
-     *
-     * @var \App\Services\AccessTokenRepository\AccessTokenRepository
+     * @var AccessTokenRepository
      */
     protected AccessTokenRepository $tokenRepository;
 
     /**
-     * Reference on access token repository instance.
-     *
-     * @var \Psr\Log\LoggerInterface;
+     * @var LoggerInterface
      */
     protected LoggerInterface $logger;
 
-
     /**
-     * Reference on cache item poll interface implementation instance.
-     *
-     * @var \Psr\Cache\CacheItemPoolInterface
+     * @var CacheItemPoolInterface
      * @see FilesystemAdapter
      */
     protected CacheItemPoolInterface $cache;
 
     /**
-     * @param \App\Services\HttpCaller\MakesHttpRequest                 $caller
-     * @param \App\Services\AccessTokenRepository\AccessTokenRepository $tokenRepository
-     * @param \Psr\Cache\CacheItemPoolInterface                         $cache
-     * @param \Psr\Log\LoggerInterface                                  $logger
-     * @param array                                                     $options
+     * @param MakesHttpRequest $caller
+     * @param AccessTokenRepository $tokenRepository
+     * @param CacheItemPoolInterface $cache
+     * @param LoggerInterface $logger
+     * @param array $options
      */
     public function __construct(
         MakesHttpRequest $caller,
@@ -79,13 +70,12 @@ class SsoUserGateway implements UserGatewayInterface
         $this->tokenRepository = $tokenRepository;
         $this->cache = $cache;
         $this->logger = $logger;
-
     }
 
     /**
-     * @return \App\Entity\User|null
-     * @throws \App\Services\UserGateway\Exceptions\BadGatewayException
-     * @throws \App\Services\UserGateway\Exceptions\UnauthorizedResponseException
+     * @return User|null
+     * @throws BadGatewayException
+     * @throws UnauthorizedResponseException
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getUser(): ?User
@@ -94,6 +84,7 @@ class SsoUserGateway implements UserGatewayInterface
         if (null === $accessToken) {
             return null;
         }
+
         $item = $this->cache->getItem($accessToken);
         if (!$item->isHit()) {
             $response = $this->validateResponse(
@@ -111,8 +102,7 @@ class SsoUserGateway implements UserGatewayInterface
 
     /**
      * @param array $data
-     *
-     * @return \App\Entity\User
+     * @return User
      */
     protected function createUserFromSsoResponse(array $data): User
     {
@@ -132,8 +122,7 @@ class SsoUserGateway implements UserGatewayInterface
      *
      * @param string $uri
      * @param string $method
-     * @param array  $options
-     *
+     * @param array $options
      * @return ResponseInterface
      */
     protected function ssoRequest(string $uri, string $method = 'get', array $options = []): ResponseInterface
@@ -144,17 +133,16 @@ class SsoUserGateway implements UserGatewayInterface
             'options' => $options,
         ]);
 
-       return $this->client->exec($method, $uri, $options);
+        return $this->client->exec($method, $uri, $options);
     }
 
     /**
      * Validate remote SSO response.
      *
-     * @param \Psr\Http\Message\ResponseInterface $response
-     *
+     * @param ResponseInterface $response
      * @return array
-     * @throws \App\Services\UserGateway\Exceptions\BadGatewayException
-     * @throws \App\Services\UserGateway\Exceptions\UnauthorizedResponseException
+     * @throws BadGatewayException
+     * @throws UnauthorizedResponseException
      */
     protected function validateResponse(ResponseInterface $response): array
     {
