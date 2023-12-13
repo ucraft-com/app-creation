@@ -1,5 +1,4 @@
 <?php
-// src/Traits/EntityPropertyTrait.php
 namespace App\Traits;
 
 trait EntityPropertyTrait
@@ -10,7 +9,7 @@ trait EntityPropertyTrait
      * @param object $object The object to set properties on.
      * @param array  $properties An associative array of properties to set.
      */
-    public function setProperties(object $object, array $properties): void
+    public function setPropertiesFromObj(object $object, array $properties): void
     {
         foreach ($properties as $property => $value) {
             // Check if the property exists before setting it

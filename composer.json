@@ -16,14 +16,15 @@
         "jms/serializer-bundle": "^5.3",
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
-        "sensio/framework-extra-bundle": "*",
         "symfony/console": "6.3.*",
+        "symfony/dependency-injection": "6.3.*",
         "symfony/dotenv": "6.3.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.4",
         "symfony/form": "6.3.*",
         "symfony/framework-bundle": "6.3.*",
         "symfony/http-client": "6.3.*",
         "symfony/monolog-bundle": "^3.10",
+        "symfony/psr-http-message-bridge": "6.4.x-dev",
         "symfony/runtime": "6.3.*",
         "symfony/validator": "6.3.*",
         "symfony/yaml": "6.3.*"
@@ -77,6 +78,7 @@
         }
     },
     "require-dev": {
+        "symfony/contracts": "^3.4",
         "symfony/debug-bundle": "6.3.*",
         "symfony/maker-bundle": "^1.51"
     }

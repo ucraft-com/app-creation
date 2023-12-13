@@ -1,5 +1,4 @@
 <?php
-// src/Dto/ApplicationDto.php
 
 namespace App\Dto;
 
@@ -20,13 +19,12 @@ class ApplicationDto
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'type' => $this->type,
-            'status' => $this->status,
-            'alias' => $this->alias,
+            'name'        => $this->name,
+            'type'        => $this->type,
+            'status'      => $this->status,
+            'alias'       => $this->alias,
             'description' => $this->description,
-            'logo' => $this->logo,
-            // Add other properties as needed
+            'logo'        => $this->logo,
         ];
     }
     /**
@@ -36,7 +34,6 @@ class ApplicationDto
      */
     public function getProperties(): array
     {
-        // Use get_object_vars to retrieve public properties
         return get_object_vars($this);
     }
 }

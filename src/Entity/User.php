@@ -6,9 +6,8 @@ namespace App\Entity;
 
 
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Entity;
 
-final class User extends Entity
+final class User
 {
     /**
      * @var int
@@ -38,11 +37,6 @@ final class User extends Entity
      * @var string|null
      */
     private ?string $emailVerifiedAt;
-
-    public function __construct(string $username)
-    {
-        $this->username = $username;
-    }
 
     public function getUserIdentifier(): string
     {

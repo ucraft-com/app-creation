@@ -17,8 +17,6 @@ use App\Traits\EntityPropertyTrait;
 #[UniqueEntity(fields: ['name'], message: 'The name must be unique.')]
 class Application
 {
-    use EntityPropertyTrait;
-
     #[ORM\Id, ORM\GeneratedValue]
     #[ORM\Column(type: 'integer', updatable: false)]
     protected int $id;

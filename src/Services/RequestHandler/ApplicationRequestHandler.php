@@ -1,5 +1,4 @@
 <?php
-// src/Service/RequestHandler/ApplicationRequestHandler.php
 
 namespace App\Services\RequestHandler;
 
@@ -38,13 +37,16 @@ class ApplicationRequestHandler extends RequestHandler
      */
     public function handleApplicationRequest(Request $request): array
     {
+        $data = json_decode($request->getContent(), true);
         $dto = new ApplicationDto();
+        $this->setPropertiesFromObj($dto, $data);
+//var_dump($dto);die;
         $form = $this->formFactory->create(ApplicationDtoType::class, $dto);
 
         // Check if the form is not valid and collect validation errors
-        if (!$form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $validationErrors = $this->getValidationErrors($form);
-
+die("aaa");
             return ['dto' => $dto, 'validationErrors' => $validationErrors];
         }
 
@@ -83,8 +85,8 @@ class ApplicationRequestHandler extends RequestHandler
     {
         // Create a new Application entity and set its properties from the DTO
         $application = new Application();
-        $this->setProperties($application, $dto->getProperties());
-
+        $this->setPropertiesFromObj($application, $dto->getProperties());
+var_dump($application);
 
         return $application;
     }

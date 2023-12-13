@@ -1,4 +1,6 @@
 # config/services.yaml
+imports:
+    - { resource: services.php }
 
 parameters:
     sso_api_url: '%env(SSO_API_URL)%'
@@ -49,11 +51,22 @@ services:
     cache_service_id:
         class: Symfony\Component\Cache\Adapter\FilesystemAdapter
         arguments:
-            - 'your_cache_namespace'
+            - 'app_creation_cache'
             - '%user_provider_cache_default_lifetime%' # Set the default lifetime as an option
             - '%kernel.cache_dir%'
         calls:
             - [ setLogger, [ '@logger' ] ]
 
-imports:
-    - { resource: services.php }
+    App\Services\RequestHandler\ApplicationRequestHandler:
+        arguments:
+            $formFactory: '@form.factory'
+            $validator: '@validator'
+
+    App\Controller\ApplicationController:
+        autowire: true
+        autoconfigure: true
+        public: true
+        arguments:
+            $requestHandler: '@App\Services\RequestHandler\ApplicationRequestHandler'
+        tags:
+            - { name: 'controller.service_arguments' }
